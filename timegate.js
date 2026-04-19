@@ -1,32 +1,14 @@
-/* ============================================================
-   TIMEGATE.JS — Portal Access Window Controller
-   Runs on every page BEFORE any page logic.
-   Uses Supabase server time to prevent client clock bypass.
 
-   Logic:
-   - admin.html  → always open (admin already authenticated)
-   - index.html  → gated for teams; admin gets a small bypass link
-   - test.html   → fully gated (teams only land here after login)
-   ============================================================ */
 
 (async function () {
 
-  // ── CONFIG ────────────────────────────────────────────────────
-  // IST = UTC+5:30
-  // 20 Apr 2026 09:00 IST = 20 Apr 2026 03:30 UTC
-  // 20 Apr 2026 21:00 IST = 20 Apr 2026 15:30 UTC
-  const PORTAL_OPEN  = new Date('2026-04-20T03:30:00Z');  // 9:00 AM IST
-  const PORTAL_CLOSE = new Date('2026-04-20T15:30:00Z');  // 9:00 PM IST
+  const PORTAL_OPEN  = new Date('2026-04-20T03:30:00Z');  
+  const PORTAL_CLOSE = new Date('2026-04-20T15:30:00Z');  
 
-  const PAGE = document.body.dataset.page; // 'login' | 'test' | 'admin'
-
-  // ── admin.html: always bypass ─────────────────────────────────
+  const PAGE = document.body.dataset.page; 
   if (PAGE === 'admin') return;
-
-  // ── If admin clicked the bypass link, skip gate on login page ─
   if (PAGE === 'login' && sessionStorage.getItem('tg-admin-bypass') === '1') return;
 
-  // ── Get server time via Supabase response header ──────────────
   async function getServerTime() {
     try {
       const res = await fetch(window.SUPABASE_URL + '/rest/v1/', {
@@ -43,10 +25,8 @@
 
   const now = await getServerTime();
 
-  // ── Portal is live — let normal page logic run ────────────────
   if (now >= PORTAL_OPEN && now < PORTAL_CLOSE) return;
 
-  // ── Block the page: hide loader, show our screen ──────────────
   const ls = document.getElementById('loading-screen');
   if (ls) ls.classList.add('hidden');
 
@@ -56,7 +36,6 @@
     showClosed();
   }
 
-  // ── Admin bypass button (only on login page) ──────────────────
   function adminBypassBtn() {
     if (PAGE !== 'login') return '';
     return `
