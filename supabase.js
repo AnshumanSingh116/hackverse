@@ -1,7 +1,6 @@
 const SUPABASE_URL = "https://eahxtydczykrzzeyozjp.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhaHh0eWRjenlrcnp6ZXlvempwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MDkyMTQsImV4cCI6MjA5MjA4NTIxNH0.JnaQneuwEf5nzt61_5an5MTUzBTVhrW2iT_Eyx8BCnM";
 
-// Expose for timegate.js (must be set before timegate.js runs)
 window.SUPABASE_URL = SUPABASE_URL;
 window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
 if (!SUPABASE_URL || SUPABASE_URL === "YOUR_URL") {
@@ -18,4 +17,4 @@ if (!SUPABASE_URL || SUPABASE_URL === "YOUR_URL") {
 }
 
 window.db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-window.db.supabaseUrl = SUPABASE_URL; // expose for Edge Function calls
+window.db.supabaseUrl = SUPABASE_URL;
