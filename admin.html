@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hackverse '26 — Admin</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+   <link rel="icon" type="image/png" href="logo.png" />
+</head>
+<body data-page="admin">
+
+  <!-- Loading -->
+  <div id="loading-screen">
+    <div class="loader-text">HACKVERSE</div>
+    <div class="loader-bar"><div class="loader-fill"></div></div>
+    <span style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem">Loading admin panel…</span>
+  </div>
+
+  <div class="admin-shell hidden" id="admin-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand" style="margin-bottom:0.25rem">
+          
+      <img src="logo.png" alt="Decagon Logo" class="nav-logo">
+          <div>
+            <div class="brand-name" style="font-size:0.9rem">Hackverse</div>
+            <div class="brand-tag" style="margin-left:0">DECAGON '26</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="nav-item active" data-tab="dashboard">
+        <span class="nav-icon">◈</span> Dashboard
+      </button>
+      <button class="nav-item" data-tab="teams">
+        <span class="nav-icon">◉</span> Teams
+      </button>
+      <button class="nav-item" data-tab="submissions">
+        <span class="nav-icon">◎</span> Submissions
+      </button>
+      <button class="nav-item" data-tab="grades">
+        <span class="nav-icon">◇</span> Grades
+      </button>
+      <button class="nav-item" data-tab="violations">
+        <span class="nav-icon">⚠</span> Violations
+      </button>
+
+      <div class="sidebar-bottom">
+        <button id="refresh-btn" class="nav-item">
+          <span class="nav-icon">↻</span> Refresh
+        </button>
+        <button id="admin-signout" class="nav-item" style="color:var(--danger)">
+          <span class="nav-icon">→</span> Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+      <!-- ── Dashboard ── -->
+      <div id="tab-dashboard" class="tab-panel active">
+        <div class="section-header">
+          <h1 class="section-title">Hackverse '26 Overview</h1>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Teams</div>
+            <div class="stat-value" id="stat-teams">0</div>
+            <div class="stat-sub">registered</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Submitted</div>
+            <div class="stat-value" id="stat-submitted">0</div>
+            <div class="stat-sub">completed tests</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Violations</div>
+            <div class="stat-value" id="stat-violations" style="color:var(--danger)">0</div>
+            <div class="stat-sub">total events</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Graded</div>
+            <div class="stat-value" id="stat-graded" style="color:var(--success)">0</div>
+            <div class="stat-sub">teams graded</div>
+          </div>
+        </div>
+        <div class="alert alert-info">
+          <span>ℹ</span>
+          <span>Deploy <strong>create-team</strong> edge function to Supabase Functions before creating teams.</span>
+        </div>
+      </div>
+
+      <!-- ── Teams ── -->
+      <div id="tab-teams" class="tab-panel">
+        <div class="section-header">
+          <h1 class="section-title">Teams</h1>
+          <button id="create-team-btn" class="btn btn-primary">+ Create Team</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>School</th>
+                <th>Team ID</th>
+                <th>Students</th>
+                <th>Password</th>
+                <th>Status</th>
+                <th>Score</th>
+                <th>Violations</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="teams-tbody">
+              <tr><td colspan="7" class="text-center muted" style="padding:2rem">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Submissions ── -->
+      <div id="tab-submissions" class="tab-panel">
+        <div class="section-header">
+          <h1 class="section-title">Submissions</h1>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Team ID</th>
+                <th>Status</th>
+                <th>Started At</th>
+                <th>Questions Answered</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="submissions-tbody">
+              <tr><td colspan="5" class="text-center muted" style="padding:2rem">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Grades ── -->
+      <div id="tab-grades" class="tab-panel">
+        <div class="section-header">
+          <h1 class="section-title">Grades</h1>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Team ID</th>
+                <th>School</th>
+                <th>Score</th>
+                <th>Graded At</th>
+              </tr>
+            </thead>
+            <tbody id="grades-tbody">
+              <tr><td colspan="4" class="text-center muted" style="padding:2rem">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Violations ── -->
+      <div id="tab-violations" class="tab-panel">
+        <div class="section-header">
+          <h1 class="section-title">Violations</h1>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Team ID</th>
+                <th>Type</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="violations-tbody">
+              <tr><td colspan="3" class="text-center muted" style="padding:2rem">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ── Modal: Create Team ── -->
+  <div id="modal-new-team" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Create New Team</h3>
+        <button class="modal-close" id="modal-close-btn">✕</button>
+      </div>
+      <div id="modal-alert"></div>
+      <form id="team-form">
+        <div class="form-group">
+          <label>School Name *</label>
+          <input type="text" id="school-name" placeholder="e.g. Delhi Public School" required />
+        </div>
+        <div class="form-group">
+          <label>Student 1</label>
+          <input type="text" id="student1" placeholder="Full name" />
+        </div>
+        <div class="form-group">
+          <label>Student 2</label>
+          <input type="text" id="student2" placeholder="Full name" />
+        </div>
+        <div class="form-group">
+          <label>Student 3</label>
+          <input type="text" id="student3" placeholder="Full name" />
+        </div>
+        <button type="submit" id="create-team-submit" class="btn btn-primary btn-full">Create Team</button>
+        <div id="create-progress" class="hidden" style="margin-top:1rem">
+          <div style="display:flex;flex-direction:column;gap:0.5rem">
+            <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;font-family:var(--font-mono)">
+              <span id="step-1-icon" style="color:var(--text3)">○</span>
+              <span id="step-1-txt" style="color:var(--text3)">Generating credentials</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;font-family:var(--font-mono)">
+              <span id="step-2-icon" style="color:var(--text3)">○</span>
+              <span id="step-2-txt" style="color:var(--text3)">Creating Auth user</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;font-family:var(--font-mono)">
+              <span id="step-3-icon" style="color:var(--text3)">○</span>
+              <span id="step-3-txt" style="color:var(--text3)">Saving team to database</span>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <div id="generated-creds" class="cred-box hidden">
+        <div style="font-size:0.78rem;color:var(--success);margin-bottom:0.75rem;font-weight:600;letter-spacing:0.04em">✓ TEAM CREATED — SHARE THESE CREDENTIALS</div>
+        <div class="cred-row">
+          <span class="cred-label">Login Email</span>
+          <span class="cred-value" id="cred-email">—</span>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">Password</span>
+          <span class="cred-value" id="cred-password">—</span>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">Team ID</span>
+          <span class="cred-value" id="cred-teamid">—</span>
+        </div>
+        <p id="manual-warning" style="font-size:0.76rem;color:var(--warning);margin-top:0.75rem">
+          ⚠ Auth user and team row have been created automatically. Students can log in immediately.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: View Answers ── -->
+  <div id="modal-answers" class="modal-backdrop">
+    <div class="modal" style="max-width:640px;max-height:90vh;overflow-y:auto">
+      <div class="modal-header" style="position:sticky;top:0;background:var(--bg2);z-index:1;padding-bottom:1rem">
+        <span></span>
+        <button class="modal-close" onclick="document.getElementById('modal-answers').classList.remove('open')">✕</button>
+      </div>
+      <div id="answers-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Grade ── -->
+  <div id="modal-grade" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Assign Grade</h3>
+        <button class="modal-close" onclick="document.getElementById('modal-grade').classList.remove('open')">✕</button>
+      </div>
+      <form id="grade-form">
+        <input type="hidden" id="grade-team-id" />
+        <div class="form-group">
+          <label>Score (out of 100)</label>
+          <input type="number" id="grade-score" min="0" max="100" step="0.5" placeholder="e.g. 85" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Save Grade</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Close modals on backdrop click
+    document.querySelectorAll('.modal-backdrop').forEach(el => {
+      el.addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('open');
+      });
+    });
+  </script>
+</body>
+</html>
