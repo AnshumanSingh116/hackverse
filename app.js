@@ -1,12 +1,4 @@
 
-
-
-/* ============================================================
-   APP.JS — Test Portal
-   Shared utilities + page-specific logic
-   ============================================================ */
-
-// ── Helpers ──────────────────────────────────────────────────
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
@@ -105,9 +97,6 @@ async function initLoginPage() {
   });
 }
 
-// ============================================================
-// PAGE: test.html
-// ============================================================
 let testState = {
   session: null,
   teamId: null,
@@ -118,7 +107,7 @@ let testState = {
   timerInterval: null,
   violationCountdown: null,
   violationActive: false,
-  totalSeconds: 3600,
+  totalSeconds: 2700,
 };
 
 async function initTestPage() {
