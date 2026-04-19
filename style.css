@@ -73,6 +73,28 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.q-code-block {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.88rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre;
+  color: #a5f3fc;
+}
+.q-code-inline {
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.9em;
+  color: #a5f3fc;
+}
+
 /* ── NOISE OVERLAY ── */
 body::before {
   content: '';
