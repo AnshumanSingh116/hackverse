@@ -1,12 +1,4 @@
 
-
-
-/* ============================================================
-   APP.JS — Test Portal
-   Shared utilities + page-specific logic
-   ============================================================ */
-
-// ── Helpers ──────────────────────────────────────────────────
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
@@ -23,7 +15,6 @@ function genPassword(len = 10) {
   return Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
-// Generate team ID: school initials + student initials e.g. DPS + Apple Mango Orange → "dps-amo"
 function genTeamId(schoolName, students) {
   const schoolInitials = schoolName
     .split(/\s+/).filter(Boolean).map(w => w[0]).join('').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -44,7 +35,6 @@ function isAdminEmail(email) {
   return email && email.endsWith('@admin.com');
 }
 
-// ── Auth Guards ───────────────────────────────────────────────
 async function requireAuth(redirectIfNot = 'index.html') {
   const { data: { session } } = await window.db.auth.getSession();
   if (!session) { window.location.href = redirectIfNot; return null; }
@@ -61,15 +51,11 @@ async function requireAdmin() {
   return session;
 }
 
-// ── Hide loading screen ────────────────────────────────────────
 function hideLoading() {
   const ls = document.getElementById('loading-screen');
   if (ls) { ls.classList.add('hidden'); }
 }
 
-// ============================================================
-// PAGE: index.html (Login)
-// ============================================================
 async function initLoginPage() {
   const { data: { session } } = await window.db.auth.getSession();
   if (session) {
@@ -105,9 +91,6 @@ async function initLoginPage() {
   });
 }
 
-// ============================================================
-// PAGE: test.html
-// ============================================================
 let testState = {
   session: null,
   teamId: null,
@@ -181,7 +164,6 @@ async function startTest() {
 
   testState.questions = questions;
 
-  // Create or load submission
   if (!testState.submission) {
     const { data: newSub, error: subErr } = await window.db
       .from('submissions')
@@ -195,8 +177,6 @@ async function startTest() {
 
   document.getElementById('test-screen').classList.remove('hidden');
   renderQuestion(testState.currentQ);
-  // Enter fullscreen AFTER the test screen is visible (browser requires a
-  // visible element + user-gesture context; calling it before show() is a no-op)
   setTimeout(() => enterFullscreen(), 100);
   if (testState.submission) {
     startTimer();
@@ -238,14 +218,12 @@ function renderQuestion(index) {
   testState.currentQ = index;
   const total = testState.questions.length;
 
-  // Update counter and progress
   const counterEl = document.getElementById('q-counter');
   if (counterEl) counterEl.textContent = `${index + 1} / ${total}`;
 
   const progressFill = document.getElementById('progress-fill');
   if (progressFill) progressFill.style.width = `${((index + 1) / total) * 100}%`;
 
-  // Build question HTML
   const area = document.getElementById('question-area');
   const tagClass = q.type === 'mcq' ? '' : 'short';
   const tagLabel = q.type === 'mcq' ? '⬡ Multiple Choice' : '✎ Short Answer';
@@ -370,14 +348,11 @@ window.nextQuestion = () => {
 };
 
 window.confirmSubmit = () => {
-  // Use a custom in-page modal instead of native confirm() — the native dialog
-  // exits fullscreen on some browsers, giving students a loophole to cheat.
   const overlay = document.getElementById('submit-confirm-overlay');
   if (overlay) overlay.style.display = 'flex';
 };
 
 window.cancelSubmitConfirm = () => {
-  // Simply close the modal — anti-cheat stays armed, fullscreen stays intact
   const overlay = document.getElementById('submit-confirm-overlay');
   if (overlay) overlay.style.display = 'none';
 };
@@ -389,7 +364,6 @@ window.doSubmit = () => {
 };
 
 async function autoSubmit() {
-  // Disable anti-cheat so no more violations fire during or after submit
   _antiCheatReady = false;
   testState.violationActive = false;
 
@@ -400,7 +374,6 @@ async function autoSubmit() {
 
   if (!testState.submission?.id) { window.location.href = 'index.html'; return; }
 
-  // Mark locally first so any stray events don't re-trigger
   if (testState.submission) testState.submission.submitted = true;
 
   await window.db.from('submissions').update({
@@ -413,9 +386,6 @@ async function autoSubmit() {
   document.getElementById('submitted-screen').classList.remove('hidden');
 }
 
-// ── Anti-Cheat ────────────────────────────────────────────────
-// Simple rule: in fullscreen = safe, out of fullscreen = violation countdown.
-// Re-entering fullscreen dismisses the overlay immediately.
 let _antiCheatReady = false;
 
 function isFullscreen() {
@@ -434,9 +404,6 @@ function enterFullscreen() {
   if (req) {
     req.call(el).catch(() => {});
   }
-  // If we're already in fullscreen (e.g. after Win key minimize), fullscreenchange
-  // won't fire when re-requesting, so dismiss the overlay directly.
-  // A short delay lets the browser settle before we check.
   setTimeout(() => {
     if (isFullscreen()) dismissViolationOverlay();
   }, 300);
@@ -448,10 +415,6 @@ function exitFullscreen() {
 }
 
 function setupAntiCheat() {
-  // ── Fullscreen detection (cross-browser) ──────────────────────
-  // Chrome/Edge: fullscreenchange + document.fullscreenElement
-  // Safari:      webkitfullscreenchange + document.webkitFullscreenElement
-  // Firefox:     mozfullscreenchange   + document.mozFullScreenElement
 
   function handleFullscreenChange() {
     if (!_antiCheatReady) return;
@@ -473,20 +436,11 @@ function setupAntiCheat() {
     if (document.visibilityState === 'hidden') {
       triggerViolation('tab_switch');
     } else {
-      // They came back — if we're still in fullscreen (e.g. Win key minimize,
-      // Alt+Tab) fullscreenchange never fires, so we must dismiss here.
-      // If fullscreen was also exited, fullscreenchange fires separately and
-      // triggerViolation('fullscreen_exit') will re-show the overlay, so it's
-      // safe to dismiss optimistically here first.
       if (isFullscreen()) {
         dismissViolationOverlay();
       }
-      // If NOT in fullscreen when they return, fullscreenchange already fired
-      // (or will fire) and the overlay stays up — don't dismiss.
     }
   });
-
-  // ── Block & detect Ctrl+C / Ctrl+X / Ctrl+V and F6/Ctrl+L (address bar) ──
   document.addEventListener('keydown', (e) => {
     if (!_antiCheatReady) return;
     const key = e.key.toUpperCase();
@@ -501,7 +455,6 @@ function setupAntiCheat() {
       return;
     }
 
-    // Block F6 and Ctrl+L (focus address bar) and Ctrl+T (new tab) and Ctrl+W
     if (e.key === 'F6' || (ctrl && ['L','T','W','N'].includes(key))) {
       e.preventDefault();
       triggerViolation('address_bar');
@@ -524,15 +477,8 @@ function setupAntiCheat() {
   // ── Block right-click silently ────────────────────────────────
   document.addEventListener('contextmenu', (e) => { e.preventDefault(); });
 
-  // ── Window blur/focus fallback ─────────────────────────────────
-  // Catches cases where visibilitychange doesn't fire (some OS/browser combos).
-  // blur = window lost focus (Win key, OS notification, etc.)
-  // focus = window regained focus
   window.addEventListener('blur', () => {
     if (!_antiCheatReady) return;
-    // Only trigger if visibilitychange didn't already handle it
-    // (avoid double-violation — visibilitychange fires first on tab switch,
-    // blur fires after, so we check: if already in violation state, skip)
     if (!testState.violationActive) {
       triggerViolation('window_blur');
     }
@@ -575,9 +521,6 @@ function triggerViolation(type) {
     osc.stop(ctx.currentTime + 0.4);
   } catch {}
 
-  // "soft" violations (copy/paste/devtools/address bar): show overlay but
-  // let user dismiss it with a button — don't force them to re-enter fullscreen.
-  // "hard" violations (fullscreen exit, tab switch): must re-enter fullscreen to dismiss.
   const softViolations = ['copy', 'paste', 'select_all', 'devtools', 'address_bar'];
   const isSoft = softViolations.includes(type);
   showViolationOverlay(isSoft);
@@ -609,13 +552,11 @@ function showViolationOverlay(isSoft = false) {
   if (banner) banner.classList.add('visible');
 
   if (isSoft) {
-    // Copy/paste/devtools/address-bar warning — user can acknowledge and continue
     if (subEl) subEl.textContent = 'This action is not allowed during the test. This violation has been logged.';
     if (hintEl) hintEl.textContent = 'Click "I Understand" to continue. Further violations may auto-submit your test.';
     if (dismissBtn) dismissBtn.style.display = 'inline-block';
     if (returnBtn) returnBtn.style.display = 'none';
   } else {
-    // Fullscreen exit / tab switch — must return to fullscreen to dismiss
     if (subEl) subEl.textContent = 'You exited the test environment. Return to fullscreen immediately or your test will be auto-submitted.';
     if (hintEl) hintEl.textContent = 'Re-entering fullscreen will cancel the countdown';
     if (dismissBtn) dismissBtn.style.display = 'none';
@@ -644,9 +585,6 @@ function setupSignOut() {
   });
 }
 
-// ============================================================
-// PAGE: admin.html
-// ============================================================
 let adminState = {
   session: null,
   teams: [],
